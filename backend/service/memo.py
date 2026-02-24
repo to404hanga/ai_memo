@@ -15,6 +15,7 @@ class MemoService:
     async def create_memo(
         self,
         title: str,
+        deadline: datetime,
         alert_at: datetime,
         is_urgent: bool,
         content: str = "",
@@ -22,6 +23,7 @@ class MemoService:
         memo = Memo(
             title=title,
             content=content,
+            deadline=deadline,
             alert_at=alert_at,
             is_urgent=is_urgent,
         )
@@ -32,6 +34,7 @@ class MemoService:
         id: int,
         title: str | None = None,
         content: str | None = None,
+        deadline: datetime | None = None,
         alert_at: datetime | None = None,
         is_urgent: bool | None = None,
         done: bool | None = None,
@@ -40,6 +43,7 @@ class MemoService:
             id=id,
             title=title,
             content=content,
+            deadline=deadline,
             alert_at=alert_at,
             is_urgent=is_urgent,
             done=done,
@@ -51,7 +55,7 @@ class MemoService:
 
     async def get_memo_list(
         self,
-        alert_day: datetime | None = None,
+        deadline_day: datetime | None = None,
         done: bool | None = None,
         page: int = 1,
         page_size: int = 10,
@@ -59,23 +63,23 @@ class MemoService:
         query: list[_ColumnExpressionArgument[bool] | bool] = []
         if done is not None:
             query.append(Memo.done == done)
-        if alert_day:
-            start, end = self.__get_alert_day_start_and_end(alert_day)
-            query.append(Memo.alert_at >= start)
-            query.append(Memo.alert_at <= end)
+        if deadline_day:
+            start, end = self.__get_day_start_and_end(deadline_day)
+            query.append(Memo.deadline >= start)
+            query.append(Memo.deadline <= end)
 
         offset = (page - 1) * page_size
         limit = page_size
         memos = await self.engine.query(Memo, *query, offset=offset, limit=limit)
         return memos
 
-    def __get_alert_day_start_and_end(
-        self, alert_day: datetime
-    ) -> tuple[datetime, datetime]:
+    def __get_day_start_and_end(
+        self, day: datetime
+    ) -> tuple[datetime, datetime]: 
         start = datetime(
-            year=alert_day.year,
-            month=alert_day.month,
-            day=alert_day.day,
+            year=day.year,
+            month=day.month,
+            day=day.day,
             hour=0,
             minute=0,
             second=0,
@@ -83,9 +87,9 @@ class MemoService:
             tzinfo=timezone.utc,
         )
         end = datetime(
-            year=alert_day.year,
-            month=alert_day.month,
-            day=alert_day.day,
+            year=day.year,
+            month=day.month,
+            day=day.day,
             hour=23,
             minute=59,
             second=59,

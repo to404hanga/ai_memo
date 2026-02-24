@@ -9,6 +9,7 @@ class Memo(SQLModel, table=True):
     title: str
     content: str = ""
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    deadline: datetime
     alert_at: datetime
     is_urgent: bool = False
     done: bool = False

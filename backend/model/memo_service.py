@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field, field_validator
 class CreateMemoRequest(BaseModel):
     title: str = Field(max_length=255, min_length=1)
     content: str | None = Field(default=None, max_length=1000)
-    alert_at: datetime
+    deadline: datetime
+    alert_at: datetime | None = None
     is_urgent: bool = False
 
     @field_validator("alert_at")
@@ -22,6 +23,7 @@ class CreateMemoRequest(BaseModel):
 class UpdateMemoRequest(BaseModel):
     title: str | None = Field(default=None, max_length=255, min_length=1)
     content: str | None = Field(default=None, max_length=1000)
+    deadline: datetime | None = None
     alert_at: datetime | None = None
     is_urgent: bool | None = None
     done: bool | None = None

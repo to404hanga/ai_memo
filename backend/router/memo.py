@@ -40,6 +40,8 @@ class MemoRouter:
         )
 
     async def create_memo(self, req: CreateMemoRequest):
+        if req.alert_at is None:
+            req.alert_at = req.deadline
         await self.service.create_memo(
             **req.model_dump(),
         )
@@ -55,17 +57,17 @@ class MemoRouter:
 
     async def get_memo_list(
         self,
-        alert_day: datetime | None = None,
+        deadline_day: datetime | None = None,
         done: bool | None = None,
         page: int = 1,
         page_size: int = 10,
     ) -> list[Memo]:
         # 统一时间为 UTC
-        if alert_day:
-            alert_day = alert_day.astimezone(timezone.utc)
+        if deadline_day:
+            deadline_day = deadline_day.astimezone(timezone.utc)
 
         memos = await self.service.get_memo_list(
-            alert_day=alert_day,
+            deadline_day=deadline_day,
             done=done,
             page=page,
             page_size=page_size,

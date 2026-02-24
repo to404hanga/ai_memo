@@ -20,7 +20,7 @@ class Checker:
         while True:
             try:
                 self.logger.info("checker started")
-                await self.__check_deadline_memo()
+                await self.__check_alert_memo()
             except Exception as e:
                 self.logger.error(f"checker error: {str(e)}", exc_info=True)
 
@@ -30,9 +30,9 @@ class Checker:
             wait = sub if sub <= 30 else 60
             await sleep(wait)
 
-    async def __check_deadline_memo(self):
+    async def __check_alert_memo(self):
         now = datetime.now(timezone.utc)
-        start, end = self.__get_alert_minute_start_and_end(now)
+        start, end = self.__get_minute_start_and_end(now)
         memos = await self.engine.query(
             Memo, Memo.alert_at >= start, Memo.alert_at <= end, Memo.done == False
         )
@@ -40,25 +40,25 @@ class Checker:
         for memo in memos:
             await self.task_queue.put(memo)
 
-    def __get_alert_minute_start_and_end(
-        self, alert_minute: datetime
+    def __get_minute_start_and_end(
+        self, minute: datetime
     ) -> tuple[datetime, datetime]:
         start = datetime(
-            year=alert_minute.year,
-            month=alert_minute.month,
-            day=alert_minute.day,
-            hour=alert_minute.hour,
-            minute=alert_minute.minute,
+            year=minute.year,
+            month=minute.month,
+            day=minute.day,
+            hour=minute.hour,
+            minute=minute.minute,   
             second=0,
             microsecond=0,
             tzinfo=timezone.utc,
         )
         end = datetime(
-            year=alert_minute.year,
-            month=alert_minute.month,
-            day=alert_minute.day,
-            hour=alert_minute.hour,
-            minute=alert_minute.minute,
+            year=minute.year,
+            month=minute.month,
+            day=minute.day,
+            hour=minute.hour,
+            minute=minute.minute,
             second=59,
             microsecond=999999,
             tzinfo=timezone.utc,
