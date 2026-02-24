@@ -4,3 +4,5 @@ __pycache__/
 
 # sqlite 的数据库文件
 *.db
+
+*.log
