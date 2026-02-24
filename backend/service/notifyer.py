@@ -23,8 +23,10 @@ class Notifyer:
     def __notify(self, memo: Memo):
         try:
             notification.notify(
-                title=memo.title, message=memo.content, app_name="AI Memo", timeout=10
+                title=memo.title,
+                message=f"将于{memo.deadline}截止\n\n{memo.content}",
+                app_name="AI Memo",
+                timeout=10,
             )
         except Exception as e:
             self.logger.error(f"notifyer error: {e}")
-        
