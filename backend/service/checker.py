@@ -26,8 +26,7 @@ class Checker:
 
             # 尽量对齐时间到整点
             now = datetime.now()
-            sub = 60 - now.second
-            wait = sub if sub <= 30 else 60
+            wait = 60 - now.second
             await sleep(wait)
 
     async def __check_alert_memo(self):
