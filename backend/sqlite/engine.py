@@ -1,4 +1,4 @@
-from typing import Any, Sequence
+from typing import Sequence
 
 from sqlmodel import SQLModel, select, delete
 from sqlalchemy.sql._typing import _ColumnExpressionArgument
@@ -29,8 +29,6 @@ class SQLiteEngine:
         async with async_session() as session:
             session.add(data)
             await session.commit()
-            await session.refresh(data)
-            return data
 
     async def update[T: SQLModel](
         self, data: T, *where_clauses: _ColumnExpressionArgument[bool] | bool
