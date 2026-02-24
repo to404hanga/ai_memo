@@ -1,4 +1,12 @@
-from asyncio import CancelledError, Queue, Task, gather, create_task, wait_for, TimeoutError
+from asyncio import (
+    CancelledError,
+    Queue,
+    Task,
+    gather,
+    create_task,
+    wait_for,
+    TimeoutError,
+)
 from contextlib import asynccontextmanager
 from logging import INFO, basicConfig, getLogger
 from os import getcwd
@@ -14,7 +22,14 @@ from sqlite.engine import SQLiteEngine
 from model.memo_store import Memo
 
 WORK_DIR = getcwd()
-basicConfig(level=INFO, filename=f"{WORK_DIR}/memo.log", filemode="a")
+basicConfig(
+    level=INFO,
+    filename=f"{WORK_DIR}/memo.log",
+    filemode="a",
+    encoding="utf-8",
+    format="%(asctime)s - %(name)s-%(funcName)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
 
 logger = getLogger("AI Memo")
 engine = SQLiteEngine(models=[Memo])
