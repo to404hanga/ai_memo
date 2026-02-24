@@ -1,22 +1,75 @@
+from asyncio import CancelledError, Queue, Task, gather, create_task, wait_for, TimeoutError
 from contextlib import asynccontextmanager
+from logging import INFO, basicConfig, getLogger
+from os import getcwd
 
 import uvicorn
 from fastapi import FastAPI
 
+from service.notifyer import Notifyer
+from service.checker import Checker
 from router.memo import MemoRouter
 from service.memo import MemoService
 from sqlite.engine import SQLiteEngine
 from model.memo_store import Memo
 
+WORK_DIR = getcwd()
+basicConfig(level=INFO, filename=f"{WORK_DIR}/memo.log", filemode="a")
+
+logger = getLogger("AI Memo")
+engine = SQLiteEngine(models=[Memo])
+task_queue = Queue[Memo]()
+
+
+def task_exception_callback(task: Task):
+    try:
+        task.result()
+    except CancelledError:
+        logger.info(f"task {task.get_name()} cancelled")
+    except Exception as e:
+        logger.error(f"task {task.get_name()} error: {str(e)}", exc_info=True)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await engine.init_db()
+    # 初始化数据库
+    try:
+        await engine.init_db()
+        logger.info("database initialized")
+    except Exception as e:
+        logger.error(f"database initialization error: {str(e)}")
+        raise
+
+    # 启动后台任务
+    checker = Checker(engine=engine, task_queue=task_queue, logger=logger)
+    notifyer = Notifyer(task_queue=task_queue, logger=logger)
+
+    checker_task = create_task(checker.start(), name="checker")
+    notifyer_task = create_task(notifyer.start(), name="notifyer")
+
+    # 设置任务异常回调
+    checker_task.add_done_callback(task_exception_callback)
+    notifyer_task.add_done_callback(task_exception_callback)
+
+    logger.info("background (Checker/Notifyer) tasks started")
     yield
+    logger.info("background (Checker/Notifyer) tasks stopped")
+
+    # 取消后台任务
+    checker_task.cancel()
+    notifyer_task.cancel()
+
+    try:
+        await wait_for(gather(checker_task, notifyer_task), timeout=5.0)
+    except TimeoutError:
+        logger.error("background (Checker/Notifyer) tasks timeout")
+    except CancelledError:
+        logger.info("background (Checker/Notifyer) tasks cancelled")
+
     await engine.engine.dispose()
 
-if __name__ == "__main__":
-    engine = SQLiteEngine(models=[Memo])
 
+if __name__ == "__main__":
     memo_service = MemoService(engine=engine)
     memo_router = MemoRouter(service=memo_service)
 
