@@ -1,0 +1,6 @@
+__pycache__/
+
+.env
+
+# sqlite 的数据库文件
+*.db
