@@ -3,9 +3,6 @@ from logging import Logger
 from datetime import UTC, datetime, timezone
 from sys import platform
 
-import winotify
-import pync
-
 from model.memo_store import Memo
 
 
@@ -42,6 +39,8 @@ class Notifyer:
         jump_url = "https://www.baidu.com"
         match self.platform:
             case "win":
+                import winotify
+
                 toast = winotify.Notification(
                     app_id="AI Memo",
                     title=memo.title,
@@ -54,6 +53,8 @@ class Notifyer:
                 toast.show()
             case "darwin":
                 # ! mac osx 暂未测试
+                import pync
+
                 pync.Notifier.notify(
                     message=msg,
                     title=memo.title,
