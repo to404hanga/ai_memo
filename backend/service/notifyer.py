@@ -54,7 +54,13 @@ class Notifyer:
                 toast.show()
             case "darwin":
                 # ! mac osx 暂未测试
-                pync.Notifier.notify(message=msg, title=memo.title, open=jump_url)
+                pync.Notifier.notify(
+                    message=msg,
+                    title=memo.title,
+                    open=jump_url,
+                    sound="Ping",
+                    group="AI Memo",
+                )
             case "linux":
                 raise NotImplementedError("not yet supported for linux")
             case _:
