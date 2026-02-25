@@ -48,6 +48,7 @@ class Notifyer:
                     duration="long",
                 )
                 # ! 暂未实现查看详情功能
+                # 尽管 launch 参数可以传入自定义回调函数，但实际测试的时候发现暂时无法使用
                 toast.add_actions(label="查看详情", launch=jump_url)
                 toast.set_audio(winotify.audio.Default, loop=False)
                 toast.show()
