@@ -29,7 +29,7 @@ class Notifyer:
         try:
             notification.notify(
                 title=memo.title,
-                message=f"将于{memo.deadline.astimezone(self.WORK_TIMEZONE)}截止\n\n{memo.content}",
+                message=f"将于{memo.deadline.astimezone(self.WORK_TIMEZONE)}截止\n\n{memo.content if len(memo.content) <= 50 else memo.content[:50] + '...'}",
                 app_name="AI Memo",
                 timeout=10,
             )
