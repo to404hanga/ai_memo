@@ -34,7 +34,7 @@ class SQLiteEngine:
 
     async def update[T: SQLModel](
         self, data: T, *where_clauses: _ColumnExpressionArgument[bool] | bool
-    ):
+    ) -> None | T:
         async_session = sessionmaker(
             self.engine, class_=AsyncSession, expire_on_commit=False
         )
@@ -72,7 +72,7 @@ class SQLiteEngine:
             results: Sequence[T] = result.all()
 
             if not results:
-                return
+                return None
 
             # 设置修改数据
             update_data = data.model_dump(exclude_unset=True, exclude_none=True)
@@ -82,6 +82,8 @@ class SQLiteEngine:
                 session.add(db_record)
 
             await session.commit()
+            await session.refresh(data)
+            return data
 
     async def query[T: SQLModel](
         self,
