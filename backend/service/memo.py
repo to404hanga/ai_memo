@@ -37,8 +37,7 @@ class MemoService:
         memo = await self.engine.create(memo)
         await self.ingester.create(
             self.__get_ingest_input(memo),
-            memo.id,
-            memo.deadline,
+            memo,
         )
 
     async def update_memo(
@@ -60,11 +59,13 @@ class MemoService:
             is_urgent=is_urgent,
             done=done,
         )
-        await self.engine.update(memo)
+        memo = await self.engine.update(memo)
+        if memo is None:
+            return
+
         await self.ingester.create(
             self.__get_ingest_input(memo),
-            memo.id,
-            memo.deadline,
+            memo,
         )
 
     async def delete_memo(self, id: int):
