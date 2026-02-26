@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from asyncio import (
     CancelledError,
     Queue,
@@ -14,8 +15,12 @@ from sys import path as spath
 
 import uvicorn
 from fastapi import FastAPI
+from langchain.embeddings import init_embeddings
+from langchain_community.vectorstores import Chroma
+
 
 spath.append(opath.abspath(opath.join(opath.dirname(__file__), "../..")))
+from agent.rag.ingest import Ingester
 from service.notifyer import Notifyer
 from service.checker import Checker
 from router.memo import MemoRouter
@@ -32,10 +37,22 @@ basicConfig(
     format="%(asctime)s - %(name)s-%(funcName)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+CHROMA_PATH = f"{WORK_DIR}/chroma_notes"
+WORK_TIMEZONE = datetime.now().astimezone().tzinfo
+if WORK_TIMEZONE is None:
+    WORK_TIMEZONE = UTC
 
 logger = getLogger("AI Memo")
 engine = SQLiteEngine(models=[Memo])
 task_queue = Queue[Memo]()
+embedding_model = init_embeddings(
+    model="nomic-embed-text:latest",
+    provider="ollama",
+)
+vector_store = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_model)
+ingester = Ingester(embeddings=embedding_model, vectorstore=vector_store)
+memo_service = MemoService(engine=engine, ingester=ingester, work_timezone=WORK_TIMEZONE)
+memo_router = MemoRouter(service=memo_service)
 
 
 def task_exception_callback(task: Task):
@@ -59,7 +76,7 @@ async def lifespan(app: FastAPI):
 
     # 启动后台任务
     checker = Checker(engine=engine, task_queue=task_queue, logger=logger)
-    notifyer = Notifyer(task_queue=task_queue, logger=logger)
+    notifyer = Notifyer(task_queue=task_queue, logger=logger, work_timezone=WORK_TIMEZONE)
 
     checker_task = create_task(checker.start(), name="checker")
     notifyer_task = create_task(notifyer.start(), name="notifyer")
@@ -87,9 +104,6 @@ async def lifespan(app: FastAPI):
 
 
 if __name__ == "__main__":
-    memo_service = MemoService(engine=engine)
-    memo_router = MemoRouter(service=memo_service)
-
     app = FastAPI(lifespan=lifespan)
     app.include_router(memo_router.router)
 

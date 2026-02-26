@@ -9,15 +9,13 @@ from model.memo_store import Memo
 class Notifyer:
     task_queue: Queue[Memo]
     logger: Logger
-    WORK_TIMEZONE: timezone | None
+    work_timezone: timezone
     platform: str
 
-    def __init__(self, task_queue: Queue[Memo], logger: Logger):
+    def __init__(self, task_queue: Queue[Memo], logger: Logger, work_timezone: timezone):
         self.task_queue = task_queue
         self.logger = logger
-        self.WORK_TIMEZONE = datetime.now().astimezone().tzinfo
-        if self.WORK_TIMEZONE is None:
-            self.WORK_TIMEZONE = UTC
+        self.work_timezone = work_timezone
         if platform.startswith("win"):
             self.platform = "win"
         elif platform.startswith("darwin"):
