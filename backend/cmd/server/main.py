@@ -9,11 +9,13 @@ from asyncio import (
 )
 from contextlib import asynccontextmanager
 from logging import INFO, basicConfig, getLogger
-from os import getcwd
+from os import getcwd, path as opath
+from sys import path as spath
 
 import uvicorn
 from fastapi import FastAPI
 
+spath.append(opath.abspath(opath.join(opath.dirname(__file__), "../..")))
 from service.notifyer import Notifyer
 from service.checker import Checker
 from router.memo import MemoRouter
